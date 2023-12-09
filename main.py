@@ -1,41 +1,59 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter.messagebox import showerror
 
 root = Tk()
 root.title("Аптека")
 root.geometry("500x500")
 
-inventory = [
-    ("Анальгин", 10, 100),
-    ("Аспирин", 5, 70),
-    ("Валидол", 7, 180),
-    ("Но-шпа", 3, 290)
-]
+class Drug:
+    def __init__(self, name, count, price):
+        self.name = name
+        self.count = int(count)
+        self.price = int(price)
 
+inventory = [
+    (Drug("Анальгин", int(10), int(100))),
+    (Drug("Аспирин", int(5), int(70))),
+    (Drug("Валидол", int(7), int(180))),
+    (Drug("Но-шпа", int(3), int(290)))
+]
 def show_inventory():
+    global tree
     tree.delete(*tree.get_children())
     for item in inventory:
         #print(item, inventory[item])
-        tree.insert("",END, values=item)
+        tree.insert("",END, values=[item.name,item.count,item.price])
 
 def add_item():
     global inventory
-    item_name = item_entry.get()
-    item_quantity = quantity_entry.get()
-    item_price = price_entry.get()
-    inventory.append((item_name, item_quantity, item_price))
+    found = False
+    try:
+        item_name = item_entry.get()
+        item_quantity = int(quantity_entry.get())
+        item_price = int(price_entry.get())
+        for item in inventory:
+            if item.name == item_name:
+                item.count += item_quantity
+                item.price = item_price
+                found = True
+                break
+        if not found:
+            inventory.append(Drug(item_name, item_quantity, item_price))
+    except ValueError as e:
+        showerror(title="Ошибка", message="Сообщение об ошибке: " + str(e))
     item_entry.delete(0, END)
     quantity_entry.delete(0, END)
     price_entry.delete(0, END)
     show_inventory()
 
 def sell_item():
-    item_name = item_entry.get()
-    if item_name in inventory:
-        inventory[item_name] -= 1
-    else:
-        print("Данный товар отсутствует в аптеке.")
-    item_entry.delete(0, END)
+    for x in tree.selection():
+        x_ = tree.item(x)
+        for item in inventory:
+            if item.name == x_["values"][0]:
+                inventory.remove(item)
+
     show_inventory()
 
 def clear_inventory():
@@ -66,8 +84,8 @@ add_button.pack()
 sell_button = ttk.Button(root, text="Продать", command=sell_item)
 sell_button.pack()
 
-show_button = ttk.Button(root, text="Показать остатки товаров", command=show_inventory)
-show_button.pack()
+#show_button = ttk.Button(root, text="Показать остатки товаров", command=show_inventory)
+#show_button.pack()
 
 clear_button = ttk.Button(root, text="Очистить все товары", command=clear_inventory)
 clear_button.pack()
